@@ -1,0 +1,43 @@
+---
+- name: AD Setup
+  hosts: Active_Directory
+  vars:
+    local_admin_users:
+      - Skywalker
+  tasks:
+
+    - name: rename
+      win_command: powershell.exe
+      args:
+          stdin: Rename-Computer -NewName Command
+      tags:
+        - rename
+        - setup
+
+    - name: install AD
+      win_command: powershell.exe
+      args:
+          stdin: Install-WindowsFeature -Name AD-Domain-Services
+      tags:
+        - install_AD
+        - setup
+
+    - name: add local admin users
+      ansible.windows.win_user:
+        name: "{{ item }}"
+        password: Skywalker
+        state: present
+        groups:
+          - Administrators
+          - Users
+      loop: "{{ local_admin_users }}"
+      tags:
+        - add_local_admin
+        - add_users
+
+    - name: network discovery
+      win_command: powershell.exe
+      args:
+          stdin: netsh advfirewall firewall set rule group="Network Discovery" new enable=Yes
+      tags:
+        - network_discovery

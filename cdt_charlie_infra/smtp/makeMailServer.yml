@@ -1,0 +1,14 @@
+---
+- name: Install and configure hMailServer on Windows 10
+  hosts: windows
+  tasks:
+
+    - name: Install hMailServer
+      win_chocolatey:
+        name: hmailserver
+        state: present
+
+    - name: Restart hMailServer service
+      win_service:
+        name: hMailServer
+        state: restarted

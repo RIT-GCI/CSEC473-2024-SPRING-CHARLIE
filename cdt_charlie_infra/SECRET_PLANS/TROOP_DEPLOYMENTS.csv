@@ -1,0 +1,17 @@
+Date,Time,Location,Troop_Unit,Commander,Status
+4/3/2024,8:00:00,Coruscant,501st Legion,Captain Rex,Deployed
+4/3/2024,10:30:00,Tatooine,212th Attack Battalion,Commander Cody,En Route
+4/3/2024,13:45:00,Endor,101st Airborne Division,Lieutenant Fett,Patrolling
+4/3/2024,15:20:00,Hoth,327th Star Corps,Major Krennic,On Standby
+4/3/2024,18:10:00,Kashyyyk,41st Elite Corps,Captain Phasma,Garrisoned
+4/4/2024,7:45:00,Naboo,91st Reconnaissance Corps,Sergeant Rex,In Transit
+4/4/2024,10:00:00,Mustafar,104th Battalion,Commander Thorn,Deployed
+4/4/2024,12:30:00,Geonosis,501st Legion,Captain Rex,Engaged
+4/4/2024,16:15:00,Yavin 4,212th Attack Battalion,Commander Cody,Patrolling
+4/4/2024,19:00:00,Corellia,327th Star Corps,Major Krennic,Garrisoned
+4/5/2024,8:20:00,Kamino,501st Legion,Captain Rex,In Transit
+4/5/2024,11:45:00,Alderaan,212th Attack Battalion,Commander Cody,En Route
+4/5/2024,14:30:00,Dagobah,101st Airborne Division,Lieutenant Fett,On Standby
+4/5/2024,17:10:00,Lothal,327th Star Corps,Major Krennic,Deployed
+4/5/2024,20:00:00,Endor,501st Legion,Captain Rex,Patrolling
+TAG:SOLO,,,,,

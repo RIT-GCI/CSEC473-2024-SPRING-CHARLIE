@@ -1,0 +1,10 @@
+---
+- name: Setting windows fixed IPs
+  hosts: BlueWindows
+
+  tasks:
+    - name: Install community.general collection
+    ansible.builtin.command: ansible-galaxy collection install community.general
+
+    - name: Install ansible.cloud collection
+    ansible.builtin.command: ansible-galaxy collection install openstack.cloud

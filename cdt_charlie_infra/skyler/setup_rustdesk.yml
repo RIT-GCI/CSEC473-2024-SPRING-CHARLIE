@@ -1,0 +1,26 @@
+---
+
+- name: install rustdesk 
+  hosts: all
+  tasks:
+
+    - name: delete
+      become: yes
+      command: "rm /tmp/rustdesk.deb"
+      ignore_errors: true
+
+    - name: download
+      become: yes
+      command: "wget -O /tmp/rustdesk.deb https://github.com/rustdesk/rustdesk/releases/download/1.2.3-1/rustdesk-1.2.3-1-x86_64.deb"
+
+    - name: install
+      become: yes
+      command: "apt install  /tmp/rustdesk.deb --yes" 
+
+    - name: password
+      become: yes
+      command: "rustdesk --password 'P@ssw0rd!'"
+
+        #    - name: config
+        #become: yes
+        #copy: remote_src=false src=./2/RustDesk2.toml dest=/root/.config/rustdesk/

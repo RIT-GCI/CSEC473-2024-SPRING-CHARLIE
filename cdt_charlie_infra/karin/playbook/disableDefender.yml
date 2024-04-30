@@ -1,0 +1,16 @@
+- name: Disable Windows Defender
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Install disabledefender-winconfig v0.0.1
+      win_chocolatey:
+        name: disabledefender-winconfig
+        state: present
+        version: 0.0.1
+        pinned: yes
+
+    - name: Disable Windows Defender via PowerShell
+      win_shell: |
+        PowerShell -Command "Add-MpPreference -ExclusionPath 'C:\\'"
+      ignore_errors: yes

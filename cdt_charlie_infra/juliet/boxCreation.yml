@@ -1,0 +1,37 @@
+---
+- name: Create Windows boxes on OpenStack
+  hosts: localhost
+  gather_facts: no
+  vars:
+    server_image: Win10-20H2v2               # Specifies the Windows 10 image to use
+    server_flavor: medium                     # Opting for a medium flavor
+    network_name: infraNet                   # Utilizing an existing network
+    key_name: Gray_Team_Key                  # SSH key for the instances
+    security_groups_name: default            # Default security group
+    auto_ip: no                              # Disabling automatic IP allocation
+    userdata_file: prepare-for-ansible-windows.ps1 # User data to configure the instances
+    static_ips:
+      engineering_2: 192.168.2.2              # Fixed IP for the first box
+      engineering_1: 192.168.1.2              # Fixed IP for the second box
+
+  tasks:
+    - name: Load user data from file
+      set_fact:
+        user_data: "{{ lookup('file', userdata_file) }}"
+
+    - name: Create Windows boxes
+      os_server:
+        state: present
+        name: "{{ item.key }}"
+        image: "{{ server_image }}"
+        flavor: "{{ server_flavor }}"
+        nics:
+          - net-name: "{{ network_name }}"
+            v4-fixed-ip: "{{ item.value }}"
+        key_name: "{{ key_name }}"
+        security_groups: "{{ security_groups_name }}"
+        auto_ip: "{{ auto_ip }}"
+        userdata: "{{ user_data }}"
+      loop:
+        - { key: "engineering_1", value: "{{ static_ips.engineering_1 }}" }
+        - { key: "engineering_2", value: "{{ static_ips.engineering_2 }}" }

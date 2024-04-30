@@ -1,0 +1,1 @@
+openstack server create --flavor large --image WinSrv2019-17763-2022 --boot-from-volume 60 --user-data ./prepare-for-ansible-windows.ps1 --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip=192.168.3.1 --key-name Grey_Team_Key Skywalker

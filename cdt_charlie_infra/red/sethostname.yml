@@ -1,0 +1,18 @@
+---
+- name: Set Hostnames
+  hosts: all
+  tasks:
+    - name: "Set Hostnames"
+      command: "hostnamectl set-hostname {{ hostvars[inventory_hostname]['hostname'] }}"
+      become: yes
+
+- name: Add admin users
+  hosts: all
+  tasks:
+  - name: make user
+    user:
+      name: "{{ hostvars[inventory_hostname]['hostname'] }}"
+      shell: "/bin/bash"
+      groups: "sudo"
+      password: "{{ hostvars[inventory_hostname]['hostname'] | password_hash('sha512') }}"
+    become: yes

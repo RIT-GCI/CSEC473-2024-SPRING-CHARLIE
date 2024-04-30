@@ -1,0 +1,102 @@
+---
+- name: Create Red Kali boxes
+  hosts: localhost
+  tasks:
+
+    - name: Create Red 1
+      command: >
+        openstack server create
+        --flavor medium
+        --image Kali-2023.1
+        --boot-from-volume 90
+        --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip="192.168.3.2"
+        --key-name Red_Access
+        --property hostname=Dreis
+        Dreis
+    - name: Create Red 2
+      command: >
+        openstack server create
+        --flavor medium
+        --image Kali-2023.1
+        --boot-from-volume 90
+        --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip="192.168.3.3"
+        --key-name Red_Access
+        --property hostname=Narra
+        Narra
+    - name: Create Red 3
+      command: >
+        openstack server create
+        --flavor medium
+        --image Kali-2023.1
+        --boot-from-volume 90
+        --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip="192.168.3.4"
+        --key-name Red_Access
+        --property hostname=Antilles
+        Antilles
+    - name: Create Red 4
+      command: >
+        openstack server create
+        --flavor medium
+        --image Kali-2023.1
+        --boot-from-volume 90
+        --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip="192.168.3.5"
+        --key-name Red_Access
+        --property hostname=Janson
+        Janson
+    - name: Create Red 5
+      command: >
+        openstack server create
+        --flavor medium
+        --image Kali-2023.1
+        --boot-from-volume 90
+        --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip="192.168.3.6"
+        --key-name Red_Access
+        --property hostname=Surrel
+        Surrel
+    - name: Create Red 6
+      command: >
+        openstack server create
+        --flavor medium
+        --image Kali-2023.1
+        --boot-from-volume 90
+        --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip="192.168.3.7"
+        --key-name Red_Access
+        --property hostname=Dinnes
+        Dinnes
+    - name: Create Red 7
+      command: >
+        openstack server create
+        --flavor medium
+        --image Kali-2023.1
+        --boot-from-volume 90
+        --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip="192.168.3.8"
+        --key-name Red_Access
+        --property hostname=Darklighter
+        Darklighter
+    - name: Create Red 8
+      command: >
+        openstack server create
+        --flavor medium
+        --image Kali-2023.1
+        --boot-from-volume 90
+        --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip="192.168.3.9"
+        --key-name Red_Access
+        --property hostname=Nett
+        Nett
+    - name: Create Red 9
+      command: >
+        openstack server create
+        --flavor medium
+        --image Kali-2023.1
+        --boot-from-volume 90
+        --nic net-id=8d63d0cf-bafb-4ec0-9ca5-ccccf82bf740,v4-fixed-ip="192.168.3.10"
+        --key-name Red_Access
+        --property hostname=Naeco
+        Naeco
+
+#- name: Add Sleep Function
+#  hosts: localhost  # or specify the hosts you want to target
+#  tasks:
+#    - name: "Pause for 60 seconds"
+#      pause:
+#        seconds: 60  

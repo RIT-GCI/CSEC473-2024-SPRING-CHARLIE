@@ -1,0 +1,117 @@
+---
+- name: Shop Install and Setup
+  hosts: windows
+  collections:
+    - ansible.windows
+  gather_facts: no
+
+  tasks:
+    - name: Install Chocolatey (Package Manager)
+      win_chocolatey:
+        name: chocolatey
+        state: present
+
+    - name: Install Git using Chocolatey
+      win_chocolatey:
+        name: git
+        state: present
+
+    - name: Clone the Vite and React shop repository
+      win_shell: |
+        git clone https://github.com/mjay-kerberos/Shop.git C:\Projects\Shop
+      args:
+        creates: C:\Projects\Shop
+      tags:
+        - git_clone
+
+    - name: Install Node.js using Chocolatey
+      win_chocolatey:
+        name: nodejs
+        state: present
+      tags:
+        - nodejs_install
+
+    - name: Install frontend dependencies
+      win_shell: |
+        cd C:\Projects\Shop\frontend
+        npm install
+      args:
+        chdir: 'C:\\Projects\\Shop\\frontend'
+      tags:
+        - frontend_dependencies
+
+    - name: Install backend dependencies
+      win_shell: |
+        cd C:\Projects\Shop\backend
+        npm install
+      args:
+        chdir: 'C:\\Projects\\Shop\\backend'
+      tags:
+        - backend_dependencies
+
+    - name: Add Node.js and npm to PATH
+      win_environment:
+        state: present
+        name: Path
+        value: 'C:\Program Files\nodejs;C:\NodeJS\npm'
+        level: machine
+      tags:
+        - add_path
+
+    - name: Install PM2 and pm2-windows-service globally
+      win_shell: |
+        C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "npm install pm2 -g"
+        C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "npm install pm2-windows-service -g"
+        C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "npm install -g npm-check-updates"
+        C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "npm install -g inquirer@7.0.4"
+      args:
+        executable: 'C:\\Windows\\System32\\cmd.exe'
+
+
+    - name: Update inquirer module
+      win_shell: |
+        cd C:\\NodeJS\\npm\\node_modules\\pm2-windows-service
+        ncu inquirer -u
+        npm install
+      args:
+        executable: 'C:\\Program Files\\nodejs\\npm.cmd'
+      tags:
+        - pm2_update
+
+    - name: Install PM2 as a service
+      win_shell: |
+        cd C:\\NodeJS\\npm\\node_modules\\pm2-windows-service
+        pm2-service-install -n ShopService
+        pm2 -g save
+      args:
+        executable: 'C:\\Program Files\\nodejs\\npm.cmd'
+      tags:
+        - pm2_service_install
+
+    - name: Configure PM2 startup scripts
+      win_shell: |
+        pm2 start C:\\Projects\\Shop\\backend\\index.js --name ShopBackend
+        pm2 start C:\\Projects\\Shop\\frontend\\node_modules\\.bin\\vite.cmd --name ShopFrontend -- run dev
+        pm2 -g save
+      args:
+        executable: 'C:\\Program Files\\nodejs\\npm.cmd'
+      tags:
+        - pm2_configure
+
+    - name: Set PM2 service to run as Administrator
+      win_service:
+        name: ShopService
+        start_mode: delayed-auto
+        delayed_start: yes
+        delayed_start_time: 30
+        start_as_user: Administrator
+      tags:
+        - pm2_service_set_administrator
+
+    - name: Ensure PM2 service starts automatically with Windows
+      win_service:
+        name: ShopService
+        start_mode: auto
+        state: started
+      tags:
+        - pm2_service_auto_start

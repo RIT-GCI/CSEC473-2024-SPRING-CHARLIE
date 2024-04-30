@@ -1,0 +1,107 @@
+---
+- name: AD Setup
+  hosts: Active_Directory
+  vars:
+    local_admin_users:
+      - Maul
+      - Dooku
+    local_default_users:
+      - Pryce
+      - Droid
+      - Trooper
+    AD_admin_users:
+      - Tarkin
+      - Vader
+      - Palpatine
+    AD_default_users:
+      - Daala
+      - Krennic
+      - Thrawn
+      - Sloane
+      - Hux
+      - Motti
+      - Rukh
+  tasks:
+
+    - name: rename
+      win_command: powershell.exe
+      args:
+          stdin: Rename-Computer -NewName Command
+      tags:
+        - rename
+        - setup
+
+    - name: install AD
+      win_command: powershell.exe
+      args:
+          stdin: Install-WindowsFeature -Name AD-Domain-Services
+      tags:
+        - install_AD
+        - setup
+
+    - name: add local admin users
+      ansible.windows.win_user:
+        name: "{{ item }}"
+        password: P@ssw0rd!
+        state: present
+        groups:
+          - Administrators
+          - Users
+      loop: "{{ local_admin_users }}"
+      tags:
+        - add_local_admin
+        - add_users
+
+    - name: add local default users
+      ansible.windows.win_user:
+        name: "{{ item }}"
+        password: P@ssw0rd!
+        state: present
+        groups:
+          - Users
+      loop: "{{ local_default_users }}"
+      tags:
+        - add_default_local
+        - add_users
+
+    - name: add domain admin users
+      win_domain_user:
+        name: "{{ item }}"
+        password: P@ssw0rd!
+        state: present
+        groups:
+          - Domain Admins
+      loop: "{{ AD_admin_users }}"
+      tags:
+        - add_domain_admin
+        - add_ad_users
+        - add_users
+
+    - name: add domain default users
+      win_domain_user:
+        name: "{{ item }}"
+        password: P@ssw0rd!
+        state: present
+      loop: "{{ AD_default_users }}"
+      tags:
+        - add_default_local
+        - add_ad_users
+        - add_users
+
+    - name: add dns a records
+      win_dns_record:
+        name: "test"
+        type: "A"
+        value: "192.168.1.2"
+        zone: "ad.team1.deathstar"
+          #loop: "{{ AD_default_users }}"
+      tags:
+        - add_dns_a_record
+
+    - name: Secret Plans
+      ansible.windows.win_copy:
+        src: /home/ubuntu/SECRET_PLANS
+        dest: C:\
+      tags:
+        - inject
+

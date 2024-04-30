@@ -1,0 +1,1 @@
+openstack server create --flavor large --image WinSrv2019-17763-2022 --boot-from-volume 250 --user-data ./prepare-for-ansible-windows.ps1 --nic net-id=6ebe83d0-859d-4914-82f3-c0057efbc88d,v4-fixed-ip=192.168.1.125 --key-name "Grey_Team_Key" Command1222222

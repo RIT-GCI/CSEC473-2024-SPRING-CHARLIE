@@ -1,0 +1,191 @@
+- name: Deploy box in network
+  hosts: localhost
+
+  tasks:
+    - name: Install openstack.cloud collection
+      ansible.builtin.command: ansible-galaxy collection install openstack.cloud
+
+    - name: Get current network ID
+      ansible.builtin.shell: >
+        openstack network list -c ID -c Name | grep infraNet | awk '{print $2}'
+      register: network_id_result
+      changed_when: false
+      check_mode: no
+#add a note for networ list based on which local network
+
+
+    - set_fact:
+        network_id: "{{ network_id_result.stdout }}"
+
+    - name: Create instance of Ubuntu Jammy Desktop
+      ansible.builtin.command: >
+        openstack server create
+        --flavor medium
+        --image UbuntuJammy2204-Desktop
+        --boot-from-volume 50
+        --nic net-id={{ network_id }},v4-fixed-ip="192.168.1.5"
+        --key-name Grey_Team_Ansible
+        Hyperdrive_1
+      ignore_errors: yes
+      # Adjust SSH key as needed, probably for anyone else its Grey_Team_Key
+      # Adjust fixed IP based on network
+      # Adjust other parameters as needed
+
+    - name: Sleep for 60 seconds
+      ansible.builtin.pause:
+        seconds: 60
+
+
+- name: Configure services
+  hosts: 192.168.1.5 #run on all hosts specified in inventory file
+  become: true  # Run tasks with sudo privileges
+  vars:
+    domain: "DeathStar"
+    domain_user: "Tarkin"
+    domain_password: "P@ssw0rd!" #may need to change domain name, to what Nathan changes it to
+
+  tasks:
+    - name: Update APT on Ubuntu Jammy Box
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      ansible.builtin.apt:
+        upgrade: yes
+        update_cache: yes
+        autoremove: yes
+        autoclean: yes
+
+    - name: Install necessary packages for AD domain joining
+      ansible.builtin.apt:
+        name:
+          - realmd
+          - krb5-user
+          - sssd
+          - sssd-tools
+          - samba
+          - samba-common-bin
+          - oddjob
+          - oddjob-mkhomedir
+          - packagekit
+          - adcli
+        state: present
+        update_cache: yes
+
+#Once AD environment is created, uncomment this.
+#    - name: Discover domain
+#      ansible.builtin.command:
+#        cmd: "realm discover {{ domain }}"
+#      register: realm_discover
+#      failed_when: "'{{ domain }}' not in realm_discover.stdout"
+
+#    - name: Join the domain
+#      ansible.builtin.shell: |
+#      no_log: true
+
+    - name: Copy rustdesk.sh to target node
+      ansible.builtin.copy:
+        src: /home/ubuntu/rustdesk.sh  # Replace with the path to your rustdesk.sh file on the control node
+        dest: /home/ubuntu/rustdesk.sh  # Replace with the desired destination path on the target node
+      become: true
+
+    - name: Change permissions of rustdesk.sh
+      ansible.builtin.file:
+        path: /home/ubuntu/rustdesk.sh  # Replace with the actual path to rustdesk.sh
+        mode: u+x  # Make the script executable only for the owner
+      become: true
+
+    - name: Run rustdesk.sh and capture output
+      ansible.builtin.shell: >
+        /home/ubuntu/rustdesk.sh | grep '\-\-'
+      register: ssh_rustdesk_output_b1
+      args:
+        chdir: /home/ubuntu  # Change directory to where rustdesk.sh is located
+      become: true
+
+    - name: Debug variable content
+      ansible.builtin.debug:
+        var: ssh_rustdesk_output_b1
+
+    - name: Save output to a file
+      ansible.builtin.copy:
+        content: "{{ ssh_rustdesk_output_b1.stdout | default('') }}"
+        dest: /home/ubuntu/ssh_rustdesk_output_b1.txt  # Replace with the desired file path
+      become: true
+
+    - name: Fetch output to control node
+      ansible.builtin.fetch:
+        src:  /home/ubuntu/ssh_rustdesk_output_b1.txt
+        dest: /home/ubuntu/ssh_rustdesk_output_b1.txt  # Replace with the desired path on your control node
+        flat: yes
+#      delegate_to: localhost
+
+    - name: Installs ssh on 192.168.1.5
+      ansible.builtin.apt:
+        name: openssh-server #installs openssh-server using apt
+      when: "'192.168.1.5' in inventory_hostname" #only runs when ip matches in the inventory file
+
+    - name: Change hostname
+      ansible.builtin.hostname:
+        name: Hyperdrive  # Replace 'new_hostname' with the desired hostname
+      become: true
+
+    - name: Create Grey_Team User
+      ansible.builtin.user:
+        name: Grey_Team #name of new user
+        password: "{{ 'P@ssw0rd123!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists
+
+    - name: Add Grey_Team to sudoers
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        line: "Grey_Team ALL=(ALL) NOPASSWD: ALL"
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create Grievous User
+      ansible.builtin.user:
+        name: Grievous #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists
+
+    - name: Add Grievous to sudoers
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        line: "Grievous ALL=(ALL) NOPASSWD: ALL"
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create Sevander User
+      ansible.builtin.user:
+        name: Sevander #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes
+
+    - name: Add Sevander to sudoers
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        line: "Sevander ALL=(ALL) NOPASSWD: ALL"
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create Yularen User
+      ansible.builtin.user:
+        name: Yularen #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists
+
+    - name: Create Titus User
+      ansible.builtin.user:
+        name: Titus #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists
+
+    - name: Create Meero User
+      ansible.builtin.user:
+        name: Meero #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists

@@ -1,0 +1,83 @@
+- name: Deploy HTTP box in network
+  hosts: localhost
+  tasks:
+    - name: Install openstack.cloud collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install openstack.cloud
+
+    - name: Get current network ID
+      ansible.builtin.shell:
+        cmd: openstack network list -c ID -c Name | grep infraNet | awk '{print $2}'
+      register: network_id_result
+      changed_when: false
+
+    - set_fact:
+        network_id: "{{ network_id_result.stdout }}"
+
+    - name: Create instance of Ubuntu Jammy Desktop for HTTP box
+      ansible.builtin.command: >
+        openstack server create
+        --flavor medium
+        --image UbuntuJammy2204-Desktop
+        --boot-from-volume 50
+        --nic net-id={{ network_id }},v4-fixed-ip="192.168.2.6"
+        --key-name "grey team key"
+        Armory_2
+      ignore_errors: yes
+
+    - name: Sleep for 60 seconds
+      ansible.builtin.pause:
+        seconds: 60
+
+- name: Configure HTTP services on Armory
+  hosts: 192.168.2.6
+  become: true
+  tasks:
+    - name: Update and upgrade APT packages
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: yes
+        autoremove: yes
+        autoclean: yes
+
+    - name: Install Apache HTTP Server
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+      when: "'192.168.2.6' == inventory_hostname"
+
+    - name: Ensure Apache is running and enabled
+      ansible.builtin.service:
+        name: apache2
+        state: started
+        enabled: yes
+      when: "'192.168.2.6' == inventory_hostname"
+
+    - name: Change hostname to Armory
+      ansible.builtin.hostname:
+        name: Armory
+
+    - name: Create and configure users
+      block:
+        - name: Create user {{ item.name }}
+          ansible.builtin.user:
+            name: "{{ item.name }}"
+            password: "{{ item.password | password_hash('sha512') }}"
+            shell: /bin/bash
+          loop:
+            - { name: 'Grey_Team', password: 'P@ssw0rd123!' }
+            - { name: 'Grievous', password: 'P@ssw0rd!' }
+            - { name: 'Sevander', password: 'P@ssw0rd!' }
+            - { name: 'Yularen', password: 'P@ssw0rd!' }
+            - { name: 'Titus', password: 'P@ssw0rd!' }
+            - { name: 'Meero', password: 'P@ssw0rd!' }
+
+        - name: Add specific users to sudoers
+          ansible.builtin.lineinfile:
+            path: /etc/sudoers
+            line: "{{ item }} ALL=(ALL) NOPASSWD: ALL"
+            validate: '/usr/sbin/visudo -cf %s'
+          loop:
+            - 'Grey_Team'
+            - 'Grievous'
+            - 'Sevander'

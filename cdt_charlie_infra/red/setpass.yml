@@ -1,0 +1,10 @@
+---
+
+- name: install rustdesk 
+  hosts: all
+  tasks:
+  - name: change pass
+    become: true
+    ansible.builtin.user:
+      name: kali
+      password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}"

@@ -1,0 +1,7 @@
+openstack server create --flavor medium --image Win10-20H2v2 --boot-from-volume 50 --user-data prepare-for-ansible-windows.ps1 --nic net-id=e1f3c5f5-5c28-4200-b4c1-3e7e4500478a,v4-fixed-ip=172.16.2.1 --key-name Grey_Team_Key ShieldGen_2
+
+
+
+
+
+

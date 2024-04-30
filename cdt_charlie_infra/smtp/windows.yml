@@ -1,0 +1,40 @@
+- name: Add local users
+  hosts: windows
+  gather_facts: no
+  vars:
+    users:
+      - username: Maul
+        password: P@ssw0rd!
+        privilege: Admin
+      - username: Dooku
+        password: P@ssw0rd!
+        privilege: Admin
+      - username: Pryce
+        password: P@ssw0rd!
+        privilege: Non-Admin
+      - username: Droid
+        password: P@ssw0rd!
+        privilege: Non-Admin
+      - username: Trooper
+        password: P@ssw0rd!
+        privilege: Non-Admin
+
+  tasks:
+    - name: Ensure local users are added
+      win_user:
+        name: "{{ item.username }}"
+        password: "{{ item.password }}"
+        state: present
+        update_password: on_create
+      loop: "{{ users }}"
+
+    - name: Add user to Administrators group if privilege is Admin
+      win_group_membership:
+        name: Administrators
+        members: "{{ item.username }}"
+        state: present
+      when: item.privilege == 'Admin'
+      loop: "{{ users }}"
+
+    - name: Disable Windows Defender
+      win_command: Set-MpPreference -DisableRealtimeMonitoring $true

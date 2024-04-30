@@ -1,0 +1,36 @@
+---
+- name: Add local users
+  hosts: windows
+  gather_facts: no
+  vars:
+    users:
+      - username: Maul
+        password: P@sswOrd!
+        privilege: Admin
+      - username: Dooku
+        password: P@sswOrd!
+        privilege: Admin
+      - username: Pryce
+        password: P@sswOrd!
+        privilege: Non-Admin
+      - username: Droid
+        password: P@sswOrd!
+        privilege: Non-Admin
+      - username: Trooper
+        password: P@sswOrd!
+        privilege: Non-Admin
+
+  tasks:
+    - name: Ensure local users are added
+      ansible.windows.win_user:
+        name: "{{ item.username }}"
+        password: "{{ item.password }}"
+        state: present
+        groups: 
+          - "{{ 'Administrators' if item.privilege == 'Admin' else 'Users' }}"
+        update_password: on_create
+      loop: "{{ users }}"
+
+    - name: Disable Windows Defender
+      ansible.windows.win_shell: |
+        Set-MpPreference -DisableRealtimeMonitoring $true

@@ -1,0 +1,73 @@
+---
+
+- name: install mysql 
+  hosts: all
+  tasks:
+
+    - name: install mysql-server 
+      apt:
+        name: ["mysql-server","python3-pip"] 
+        update_cache: yes
+      become: yes
+
+    - name: Install the MySQL-python through pip
+      become: yes
+      pip:
+        name: ['pip', 'PyMySQL']
+        state: forcereinstall
+
+    - name: Add admin users
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+        shell: "/bin/bash"
+        groups: "sudo"
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}"
+      loop:
+           - Grievous 
+           - Sevander
+      become: yes
+
+    - name: Add non-admin users
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+        shell: "/bin/bash"
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}"
+      loop:
+           - Yularen
+           - Titus
+           - Meero
+      become: yes
+
+    - name: Add mysql users
+      community.mysql.mysql_user:
+        name: "{{ item }}"
+        password: "P@ssw0rd!"
+        priv: '*.*:ALL'
+        host: '%'
+        state: present
+
+        config_file: '/etc/mysql/debian.cnf'
+      loop:
+        - Tolruck
+        - Randd
+        - Piett
+        - Ghadi
+        - Hubi
+        - Greyteam
+      become: yes
+      tags:
+        - mysql_users
+
+    - name: UFW command
+      command: "ufw allow mysql"
+      become: yes
+
+    - name: sed for mysql listener
+      command: "sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/mysql.conf.d/mysqld.cnf"
+      become: yes
+
+    - name: restart mysql service
+      command: "systemctl restart mysql.service"
+      become: yes

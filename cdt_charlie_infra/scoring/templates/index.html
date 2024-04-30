@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Status</title>
+    <style>
+        body {
+            background-image: url("/static/image.png"); /* Adjust the path accordingly */
+            background-size: cover; /* Cover the entire background */
+            background-repeat: no-repeat; /* Do not repeat the background image */
+            background-attachment: fixed; /* Keep the background image fixed while scrolling */
+            font-size: 32px; /* Set the font size for all text on the page */
+            color: white; /* Set the text color to white */
+        }
+
+        .container {
+            width: 90%; /* Set the width of the container */
+            margin: 0 auto; /* Center the container horizontally */
+            padding-top: 50px; /* Add some top padding */
+            overflow: hidden; /* Clear floats */
+        }
+
+        .team-column {
+            float: left; /* Float the columns */
+            width: 45%; /* Set the width of each column */
+            padding: 20px; /* Add some padding */
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background color */
+            border-radius: 10px; /* Add border radius */
+            box-sizing: border-box; /* Include padding and border in the box's total width and height */
+        }
+
+        .team-column h2 {
+            text-align: center; /* Center align the heading */
+            background-color: #ffd700; /* Set background color to gold */
+            padding: 10px; /* Add padding */
+            border-radius: 5px; /* Add border radius */
+            text-shadow: -2px -2px 0 #000,  
+                         2px -2px 0 #000,
+                         -2px 2px 0 #000,
+                         2px 2px 0 #000; /* Add outline effect using text-shadow */
+        }
+
+        .team-column ul {
+            list-style-type: none; /* Remove bullets from the list */
+            padding: 0; /* Remove default padding */
+        }
+
+        .team-column ul li {
+            font-size: 18px; /* Set the font size for list items */
+            margin-bottom: 10px; /* Add some bottom margin */
+            background-color: #00ff00; /* Set background color to green */
+            padding: 5px; /* Add padding */
+            border-radius: 5px; /* Add border radius */
+            text-shadow: -2px -2px 0 #000,  
+                         2px -2px 0 #000,
+                         -2px 2px 0 #000,
+                         2px 2px 0 #000; /* Add outline effect using text-shadow */
+        }
+
+        .team-score {
+            text-align: center; /* Center align the score */
+            margin-top: 20px; /* Add some top margin */
+            background-color: #ff4500; /* Set background color to orange */
+            padding: 10px; /* Add padding */
+            border-radius: 5px; /* Add border radius */
+            text-shadow: -2px -2px 0 #000,  
+                         2px -2px 0 #000,
+                         -2px 2px 0 #000,
+                         2px 2px 0 #000; /* Add outline effect using text-shadow */
+        }
+    </style>
+</head>
+
+    </style>
+</head>
+
+<body>
+    <div style="float: left; width: 45%;">
+        <h2>Team 1</h2>
+        <ul id="team1">
+            <!-- Status will be populated dynamically -->
+        </ul>
+        <h3 id="team1-score"></h3>
+    </div>
+    <div style="float: right; width: 45%;">
+        <h2>Team 2</h2>
+        <ul id="team2">
+            <!-- Status will be populated dynamically -->
+        </ul>
+        <h3 id="team2-score"></h3>
+    </div>
+
+    <script>
+        function updateStatus() {
+            fetch('/data')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('team1').innerHTML = Object.entries(data.team1_status).map(([key, value]) => `<li>${key}: ${value}</li>`).join('');
+                document.getElementById('team2').innerHTML = Object.entries(data.team2_status).map(([key, value]) => `<li>${key}: ${value}</li>`).join('');
+                document.getElementById('team1-score').innerText = `Team 1 Score: ${data.team1_score}`;
+                document.getElementById('team2-score').innerText = `Team 2 Score: ${data.team2_score}`;
+            });
+        }
+
+        updateStatus();
+        setInterval(updateStatus, 5000); // 4.5 minutes in milliseconds
+    </script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+- name: Deploy box in network
+  hosts: localhost
+
+  tasks:
+    - name: Install openstack.cloud collection
+      ansible.builtin.command: ansible-galaxy collection install openstack.cloud
+
+    - name: Get current network ID
+      ansible.builtin.shell: >
+        openstack network list -c ID -c Name | grep -w remote_net | awk '{print $2}'
+      register: network_id_result
+      changed_when: false
+      check_mode: no
+#add a note for network list based on which local network
+
+    - set_fact:
+        network_id: "{{ network_id_result.stdout }}"
+
+    - name: Create instance of Ubuntu Jammy Desktop
+      ansible.builtin.command: >
+        openstack server create
+        --flavor medium
+        --image UbuntuJammy2204-Desktop
+        --boot-from-volume 50
+        --nic net-id={{ network_id }},v4-fixed-ip="172.16.2.2"
+        --key-name Grey_Team_Key
+        StarDestroyer_2
+      ignore_errors: yes
+      # Adjust SSH key as needed, probably for anyone else its Grey_Team_Key
+      # Adjust fixed IP based on network
+      # Adjust other parameters as needed
+
+    - name: Sleep for 60 seconds
+      ansible.builtin.pause:
+        seconds: 60
+
+- name: Configure services
+  hosts: blue2 #run on all hosts specified in inventory file
+  become: true  # Run tasks with sudo privileges
+  vars:
+    domain: "team2.deathstar"
+    domain_user: "Tarkin"
+    domain_password: "P@ssw0rd!" #may need to change domain name, to what Nathan changes it to
+
+  tasks:
+    - name: Update APT on Ubuntu Jammy Box
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install necessary packages for AD domain joining
+      ansible.builtin.apt:
+        name:
+          - realmd
+          - krb5-user
+          - sssd
+          - sssd-tools
+          - samba
+          - samba-common-bin
+          - oddjob
+          - oddjob-mkhomedir
+          - packagekit
+          - adcli
+        state: present
+        update_cache: yes
+
+#Once AD environment is created, uncomment this.
+#    - name: Discover domain
+#      ansible.builtin.command:
+#        cmd: "realm discover {{ domain }}"
+#      register: realm_discover
+#      failed_when: "'{{ domain }}' not in realm_discover.stdout"
+
+#    - name: Join the domain
+#      ansible.builtin.shell: |
+#        echo "{{ domain_password }}" | realm join --user="{{ domain_user }}" {{ domain }} -v
+#      no_log: true
+
+    - name: Change hostname
+      ansible.builtin.hostname:
+        name: StarDestroyer  # Replace 'new_hostname' with the desired hostname
+      become: true
+
+    - name: Create Grey_Team User
+      ansible.builtin.user:
+        name: Grey_Team #name of new user
+        password: "{{ 'P@ssw0rd123!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists
+
+    - name: Add Grey_Team to sudoers
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        line: "Grey_Team ALL=(ALL) NOPASSWD: ALL"
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create Grievous User
+      ansible.builtin.user:
+        name: Grievous #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists
+
+    - name: Add Grievous to sudoers
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        line: "Grievous ALL=(ALL) NOPASSWD: ALL"
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create Sevander User
+      ansible.builtin.user:
+        name: Sevander #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes
+
+    - name: Add Sevander to sudoers
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        line: "Sevander ALL=(ALL) NOPASSWD: ALL"
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create Yularen User
+      ansible.builtin.user:
+        name: Yularen #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists
+
+    - name: Create Titus User
+      ansible.builtin.user:
+        name: Titus #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists
+
+    - name: Create Meero User
+      ansible.builtin.user:
+        name: Meero #name of new user
+        password: "{{ 'P@ssw0rd!' | password_hash('sha512') }}" # has to hash password to place into shadow file correctly
+        shell: /bin/bash #sets the shell for the user on login
+      ignore_errors: yes  # Ignore errors if the user already exists
+
+- name: Install and Configure VSFTPD on Ubuntu
+  hosts: blue2
+  become: yes # Use sudo
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600  # Optional: Cache valid for 1 hour to avoid repetitive updates
+
+    - name: Install VSFTPD
+      ansible.builtin.apt:
+        name: vsftpd
+        state: present
+
+    - name: Start and enable VSFTPD
+      ansible.builtin.systemd:
+        name: vsftpd
+        state: started
+        enabled: yes
+
+    - name: Copy VSFTPD configuration file
+      ansible.builtin.copy:
+        src: /home/ubuntu/ftp/vsftp.conf
+        dest: /etc/vsftpd.conf
+      notify: restart vsftpd
+
+  handlers:
+    - name: restart vsftpd
+      ansible.builtin.systemd:
+        name: vsftpd
+        state: restarted
